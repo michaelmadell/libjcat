@@ -1,2 +1,6 @@
 build
 dist
+windows
+firmware.bin
+firmware*.jcat
+contrib/win32/*.log
