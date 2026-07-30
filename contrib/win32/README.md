@@ -45,8 +45,19 @@ toolchain copy.
 makensis -DVERSION=0.2.7 -DSRCDIR=../../dist contrib/win32/jcat-tool.nsi
 ```
 
-Use the NSIS *large strings* build if you keep the PATH component; the stock
-build truncates environment strings at 1024 characters.
+Paths in the script -- including `SRCDIR` -- resolve relative to the `.nsi`
+file, not to your working directory, so the installer is written to
+`contrib/win32/jcat-tool-<version>-x86_64-setup.exe` wherever you invoke
+makensis from.
+
+PATH editing is delegated to `contrib/win32/path-edit.ps1` so that neither
+NSIS's 1024-character string limit nor `REG_EXPAND_SZ` expansion can corrupt
+the machine PATH. To see what it would do without writing anything:
+
+```sh
+powershell -ExecutionPolicy Bypass -File contrib/win32/path-edit.ps1 \
+  -Dir 'C:\Program Files\libjcat\bin' -Action Add -DryRun
+```
 
 ### pacman package
 

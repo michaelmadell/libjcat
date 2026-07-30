@@ -43,11 +43,7 @@ VIAddVersionKey "CompanyName" "${PUBLISHER}"
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
 !include "FileFunc.nsh"
-!include "StrFunc.nsh"
 
-; StrFunc requires each function to be declared before use
-${StrLoc}
-${UnStrRep}
 !insertmacro GetSize
 
 !define MUI_ABORTWARNING
@@ -72,6 +68,9 @@ Section "Core files (required)" SecCore
   SetOutPath "$INSTDIR"
   File /r "${SRCDIR}\*.*"
 
+  ; kept for the uninstaller; see the PATH section below
+  File "${__FILEDIR__}\path-edit.ps1"
+
   WriteRegStr HKLM "Software\${APPNAME}" "InstallDir" "$INSTDIR"
   WriteRegStr HKLM "Software\${APPNAME}" "Version" "${VERSION}"
 
@@ -95,21 +94,19 @@ Section "Core files (required)" SecCore
 SectionEnd
 
 Section "Add to system PATH" SecPath
-  ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
-  StrLen $1 $0
-  ${If} $1 > 1000
-    MessageBox MB_ICONEXCLAMATION|MB_OK \
-      "Your system PATH is very long ($1 chars) so it was left unchanged, to \
-       avoid truncating it.$\r$\nAdd $INSTDIR\bin manually if you want \
-       jcat-tool on the PATH."
+  ; Delegated to PowerShell rather than done inline: NSIS truncates strings at
+  ; 1024 chars in its default build, which silently corrupts a long PATH, and
+  ; the value has to be read unexpanded so %SystemRoot% style entries survive.
+  DetailPrint "Adding $INSTDIR\bin to the system PATH"
+  nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" \
+    -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+    -File "$INSTDIR\path-edit.ps1" -Dir "$INSTDIR\bin" -Action Add'
+  Pop $0
+  ${If} $0 != 0
+    DetailPrint "PATH update failed (exit $0); add $INSTDIR\bin manually"
   ${Else}
-    ; skip if some earlier install already added us
-    ${StrLoc} $2 "$0" "$INSTDIR\bin" ">"
-    ${If} $2 == ""
-      WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" \
-        "Path" "$0;$INSTDIR\bin"
-      SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-    ${EndIf}
+    ; tell running processes to re-read the environment
+    SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   ${EndIf}
 SectionEnd
 
@@ -122,19 +119,33 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Make jcat-tool runnable from any comman
 
 Section "Uninstall"
   SetRegView 64
-  ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
-  ${UnStrRep} $1 "$0" ";$INSTDIR\bin" ""
-  ${If} $1 != $0
-    WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path" "$1"
-    SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+
+  ; remove ourselves from PATH before deleting the script that does it
+  ${If} ${FileExists} "$INSTDIR\path-edit.ps1"
+    nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" \
+      -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+      -File "$INSTDIR\path-edit.ps1" -Dir "$INSTDIR\bin" -Action Remove'
+    Pop $0
+    ${If} $0 == 0
+      SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+    ${EndIf}
   ${EndIf}
 
-  RMDir /r "$INSTDIR\bin"
-  RMDir /r "$INSTDIR\share"
-  RMDir /r "$INSTDIR\include"
-  RMDir /r "$INSTDIR\lib"
-  Delete "$INSTDIR\Uninstall.exe"
-  RMDir "$INSTDIR"
+  ; Remove the whole install directory rather than a hardcoded list of
+  ; subdirectories, which would silently leave behind anything added to the
+  ; bundle later. Guarded on both the recorded install location and the
+  ; presence of our own binary, so a mis-set $INSTDIR cannot delete something
+  ; unrelated.
+  ReadRegStr $1 HKLM "Software\${APPNAME}" "InstallDir"
+  ${If} $1 == $INSTDIR
+  ${AndIf} ${FileExists} "$INSTDIR\bin\${EXENAME}"
+    RMDir /r "$INSTDIR"
+  ${Else}
+    MessageBox MB_ICONEXCLAMATION|MB_OK \
+      "$INSTDIR does not look like a ${APPNAME} installation, so its contents \
+       were left alone. Remove it by hand if you are sure."
+    Delete "$INSTDIR\Uninstall.exe"
+  ${EndIf}
 
   DeleteRegKey HKLM "${UNINSTKEY}"
   DeleteRegKey HKLM "Software\${APPNAME}"
