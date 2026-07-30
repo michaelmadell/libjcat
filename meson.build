@@ -91,10 +91,20 @@ endif
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
 global_link_args = []
-test_link_args = [
-  '-Wl,-z,relro',
-  '-Wl,-z,now',
-]
+if host_machine.system() == 'windows'
+  # ELF-only hardening has no meaning on PE/COFF; use the equivalents
+  test_link_args = [
+    '-Wl,--dynamicbase',      # ASLR
+    '-Wl,--nxcompat',         # DEP
+    '-Wl,--high-entropy-va',  # 64-bit ASLR
+    '-Wl,--no-insert-timestamp', # reproducible builds
+  ]
+else
+  test_link_args = [
+    '-Wl,-z,relro',
+    '-Wl,-z,now',
+  ]
+endif
 foreach link_arg: test_link_args
   if cc.has_link_argument(link_arg)
     global_link_args += link_arg
@@ -123,8 +133,11 @@ endif
 mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
-diffcmd = find_program('diff')
+diffcmd = find_program('diff', required : false)
 gio = dependency('gio-2.0', version : '>= 2.45.8')
+
+# on MinGW, gettext lives in a separate libintl rather than inside libc
+libintl = cc.find_library('intl', required : false)
 giounix = dependency('gio-unix-2.0', version : '>= 2.45.8', required: false)
 if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')

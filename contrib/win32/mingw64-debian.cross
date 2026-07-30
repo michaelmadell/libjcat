@@ -1,0 +1,24 @@
+# Cross file for building Windows binaries on Debian/Ubuntu.
+#   sudo apt install mingw-w64 wine64
+# Debian packages no MinGW build of glib2/gnutls, so the GLib stack must come
+# from elsewhere (a subproject, or a prebuilt sysroot). Point PKG_CONFIG_LIBDIR
+# at that sysroot before configuring. Prefer the MSYS2 route unless you have a
+# specific reason to cross-compile from Debian.
+[binaries]
+c = 'x86_64-w64-mingw32-gcc-posix'
+cpp = 'x86_64-w64-mingw32-g++-posix'
+ar = 'x86_64-w64-mingw32-ar'
+strip = 'x86_64-w64-mingw32-strip'
+windres = 'x86_64-w64-mingw32-windres'
+exe_wrapper = 'wine'
+
+[properties]
+needs_exe_wrapper = true
+sys_root = '/usr/x86_64-w64-mingw32'
+pkg_config_libdir = '/usr/x86_64-w64-mingw32/lib/pkgconfig'
+
+[host_machine]
+system = 'windows'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
