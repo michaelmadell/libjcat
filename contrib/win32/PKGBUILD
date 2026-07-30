@@ -1,4 +1,4 @@
-# Maintainer: <you>
+# Maintainer: Michael Madell <michael.madell@amulethotkey.com>
 # MSYS2 PKGBUILD for mingw-w64-libjcat.
 #
 # Build with:  makepkg-mingw -sCLf
@@ -31,7 +31,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-gnutls"
              "diffutils")
 source=("${_realname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('a2d76490e124a9619909cf82b247305b764cfafffcac1f78bb8ba8ef7b53068c')
 
 # OpenPGP (-Dgpg=true) is deliberately off. gpgme_op_import() returns success
 # having considered zero keys: gpg is spawned with a correct argv and homedir,
