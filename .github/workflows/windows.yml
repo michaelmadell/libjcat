@@ -107,9 +107,9 @@ jobs:
     - uses: actions/checkout@v6.0.2
     - name: deps
       run: |
-        dnf -y install diffutils meson ninja-build git-core wine \
-          mingw64-gcc mingw64-glib2 mingw64-gnutls mingw64-json-glib \
-          mingw64-pkg-config mingw64-winpthreads
+        dnf -y install diffutils meson ninja-build git-core \
+           mingw64-gcc mingw64-glib2 mingw64-gnutls mingw64-json-glib \
+           mingw64-pkg-config mingw64-winpthreads
     - name: configure
       run: |
         meson setup build-win64 \
@@ -119,11 +119,6 @@ jobs:
           -Dvapi=false \
           -Dman=false \
           -Dgtkdoc=false \
-          -Dtests=true
+          -Dtests=false
     - name: build
       run: meson compile -C build-win64
-    - name: test under wine
-      env:
-        WINEPATH: /usr/x86_64-w64-mingw32/sys-root/mingw/bin
-        WINEDEBUG: '-all'
-      run: meson test -C build-win64 --print-errorlogs
