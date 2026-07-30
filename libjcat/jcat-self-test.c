@@ -102,7 +102,8 @@ jcat_file_func(void)
 	g_autofree gchar *json2 = NULL;
 	g_autoptr(GBytes) data = g_bytes_new("hello world", 12);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) gfile = g_file_new_for_path("/tmp/firmware.jcat");
+	g_autofree gchar *fn_tmp = g_build_filename(g_get_tmp_dir(), "firmware.jcat", NULL);
+	g_autoptr(GFile) gfile = g_file_new_for_path(fn_tmp);
 	g_autoptr(GPtrArray) blobs0 = NULL;
 	g_autoptr(GPtrArray) blobs1 = NULL;
 	g_autoptr(GPtrArray) blobs2 = NULL;

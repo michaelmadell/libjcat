@@ -16,6 +16,9 @@
 #ifdef HAVE_GIO_UNIX
 #include <glib-unix.h>
 #endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "jcat-common-private.h"
 #include "jcat-context.h"
@@ -754,6 +757,34 @@ jcat_tool_sigint_cb(gpointer user_data)
 }
 #endif
 
+#ifdef _WIN32
+/* the console control handler runs on a dedicated thread, so this may only
+ * touch things that are safe to use from another thread -- GCancellable is */
+static GCancellable *jcat_tool_win32_cancellable = NULL;
+
+static BOOL WINAPI
+jcat_tool_win32_ctrl_handler(DWORD ctrl_type)
+{
+	if (ctrl_type != CTRL_C_EVENT && ctrl_type != CTRL_BREAK_EVENT &&
+	    ctrl_type != CTRL_CLOSE_EVENT)
+		return FALSE;
+	if (jcat_tool_win32_cancellable != NULL)
+		g_cancellable_cancel(jcat_tool_win32_cancellable);
+	return TRUE;
+}
+
+/* the install prefix is not known at build time on Windows: the user may
+ * unzip us anywhere, so derive data paths from the location of the module */
+static gchar *
+jcat_tool_win32_get_datadir(const gchar *subdir)
+{
+	g_autofree gchar *root = g_win32_get_package_installation_directory_of_module(NULL);
+	if (root == NULL)
+		return NULL;
+	return g_build_filename(root, "share", subdir, NULL);
+}
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -772,6 +803,8 @@ main(int argc, char *argv[])
 	g_autoptr(JcatToolPrivate) priv = g_new0(JcatToolPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = NULL;
+	g_auto(GStrv) argv_utf8 = NULL;
+	guint argv_utf8_len;
 	const GOptionEntry options[] = {
 	    {"version", '\0', 0, G_OPTION_ARG_NONE, &version, _("Print the version number"), NULL},
 	    {"verbose",
@@ -850,11 +883,24 @@ main(int argc, char *argv[])
 #ifdef _WIN32
 	/* workaround Windows setting the codepage to 1252 */
 	g_setenv("LANG", "C.UTF-8", FALSE);
+
+	/* we emit UTF-8, so tell the console to render it as such -- without
+	 * this any non-ASCII output is mojibake even though the bytes are
+	 * correct. Failure is not fatal: output is simply redirected. */
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
 #endif
 
 	setlocale(LC_ALL, "");
 
+#ifdef _WIN32
+	{
+		g_autofree gchar *localedir = jcat_tool_win32_get_datadir("locale");
+		bindtextdomain(GETTEXT_PACKAGE, localedir != NULL ? localedir : ".");
+	}
+#else
 	bindtextdomain(GETTEXT_PACKAGE, JCAT_LOCALEDIR);
+#endif
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
@@ -913,6 +959,9 @@ main(int argc, char *argv[])
 	priv->cancellable = g_cancellable_new();
 #ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full(G_PRIORITY_DEFAULT, SIGINT, jcat_tool_sigint_cb, priv, NULL);
+#elif defined(_WIN32)
+	jcat_tool_win32_cancellable = priv->cancellable;
+	SetConsoleCtrlHandler(jcat_tool_win32_ctrl_handler, TRUE);
 #endif
 
 	/* sort by command name */
@@ -926,7 +975,16 @@ main(int argc, char *argv[])
 	/* TRANSLATORS: JCAT stands for device firmware update */
 	g_set_application_name(_("JSON Catalog Utility"));
 	g_option_context_add_main_entries(context, options, NULL);
-	ret = g_option_context_parse(context, &argc, &argv, &error);
+
+	/* on Windows the argv handed to main() is in the ANSI codepage, which
+	 * mangles any filename outside it; ask Win32 for the real command line
+	 * and convert from UTF-16 instead */
+#ifdef _WIN32
+	argv_utf8 = g_win32_get_command_line();
+#else
+	argv_utf8 = g_strdupv(argv);
+#endif
+	ret = g_option_context_parse_strv(context, &argv_utf8, &error);
 	if (!ret) {
 		/* TRANSLATORS: the user didn't read the man page */
 		g_print("%s: %s\n", _("Failed to parse arguments"), error->message);
@@ -978,8 +1036,14 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	/* run the specified command */
-	ret = jcat_tool_run(priv, argv[1], (gchar **)&argv[2], &error);
+	/* run the specified command -- note g_option_context_parse_strv() has
+	 * already removed the options it recognised, and argv_utf8 is always
+	 * NULL terminated so clamping keeps the values pointer in bounds */
+	argv_utf8_len = g_strv_length(argv_utf8);
+	ret = jcat_tool_run(priv,
+			    argv_utf8_len > 1 ? argv_utf8[1] : NULL,
+			    argv_utf8 + MIN(2, argv_utf8_len),
+			    &error);
 	if (!ret) {
 		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_FAILED)) {
 			g_autofree gchar *tmp = NULL;

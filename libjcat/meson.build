@@ -46,9 +46,19 @@ if get_option('gnutls_ed25519')
 endif
 
 jcat_mapfile = 'jcat.map'
-libjcat_ldflags = cc.get_supported_link_arguments([
-  '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), jcat_mapfile)
-])
+if host_machine.system() == 'windows'
+  # MinGW ld accepts --version-script but combining it with PE auto-export
+  # silently drops every symbol not listed, and MSVC does not support it at
+  # all. Let the linker export everything and keep the map file for the
+  # exported-API regression test only.
+  libjcat_ldflags = []
+  libjcat_link_depends = []
+else
+  libjcat_ldflags = cc.get_supported_link_arguments([
+    '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), jcat_mapfile)
+  ])
+  libjcat_link_depends = jcat_mapfile
+endif
 libjcat = library(
   'jcat',
   sources : [
@@ -72,7 +82,7 @@ libjcat = library(
   include_directories : configinc,
   dependencies : libjcat_deps,
   link_args : libjcat_ldflags,
-  link_depends : jcat_mapfile,
+  link_depends : libjcat_link_depends,
   install : true
 )
 
@@ -192,21 +202,37 @@ if get_option('introspection')
       '@OUTPUT@',
     ],
   )
-  test('jcat-exported-api', diffcmd,
-       args : [
-        '-urNp',
-        join_paths(meson.current_source_dir(), 'jcat.map'),
-        mapfile_target,
-        ],
-      )
+  if diffcmd.found()
+    test('jcat-exported-api', diffcmd,
+         args : [
+          '-urNp',
+          join_paths(meson.current_source_dir(), 'jcat.map'),
+          mapfile_target,
+          ],
+        )
+  endif
 endif
 
 if get_option('cli')
+jcat_tool_win_res = []
+if host_machine.system() == 'windows'
+  windows = import('windows')
+  jcat_tool_win_res += windows.compile_resources(
+    configure_file(
+      input : 'jcat-tool.rc.in',
+      output : 'jcat-tool.rc',
+      configuration : conf,
+    ),
+    depend_files : files('jcat-tool.manifest'),
+    include_directories : include_directories('.'),
+  )
+endif
 jcat_tool = executable(
   'jcat-tool',
   sources : [
     'jcat-common.c',
     'jcat-tool.c',
+    jcat_tool_win_res,
   ],
   include_directories : [
     configinc,
@@ -214,6 +240,7 @@ jcat_tool = executable(
   dependencies : [
     giounix,
     libjsonglib,
+    libintl,
   ],
   link_with : [
     libjcat,

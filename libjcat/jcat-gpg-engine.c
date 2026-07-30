@@ -7,6 +7,9 @@
 #include "config.h"
 
 #include <gpgme.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "jcat-engine-private.h"
 #include "jcat-gpg-engine.h"
@@ -19,6 +22,71 @@ struct _JcatGpgEngine {
 G_DEFINE_TYPE(JcatGpgEngine, jcat_gpg_engine, JCAT_TYPE_ENGINE)
 
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gpgme_data_t, gpgme_data_release, NULL)
+
+#ifdef _WIN32
+/* Returns the directory holding the libjcat module itself, which is where the
+ * GnuPG helpers are shipped. Deliberately not
+ * g_win32_get_package_installation_directory_of_module(), because that strips
+ * a trailing bin/ and so cannot distinguish a flat unzip layout from a
+ * prefix-style one. */
+static gchar *
+jcat_gpg_engine_win32_get_module_dir(void)
+{
+	HMODULE hmodule = NULL;
+	wchar_t buf[MAX_PATH + 1] = {0};
+	g_autofree gchar *filename = NULL;
+
+	if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+				    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+				(LPCWSTR)&jcat_gpg_engine_win32_get_module_dir,
+				&hmodule))
+		return NULL;
+	if (GetModuleFileNameW(hmodule, buf, MAX_PATH) == 0)
+		return NULL;
+	filename = g_utf16_to_utf8((const gunichar2 *)buf, -1, NULL, NULL, NULL);
+	if (filename == NULL)
+		return NULL;
+	return g_path_get_dirname(filename);
+}
+
+/* gpgme spawns gpg via a helper that it looks for beside the *running*
+ * executable. That is wrong whenever libjcat is loaded by a host application
+ * installed somewhere else, so point gpgme at our own directory instead. Must
+ * run before any other gpgme call, hence the GOnce. */
+static gpointer
+jcat_gpg_engine_win32_init_once(gpointer user_data)
+{
+	g_autofree gchar *dirname = jcat_gpg_engine_win32_get_module_dir();
+	g_autofree gchar *spawn_helper = NULL;
+
+	if (dirname == NULL)
+		return NULL;
+	spawn_helper = g_build_filename(dirname, "gpgme-w32spawn.exe", NULL);
+	if (!g_file_test(spawn_helper, G_FILE_TEST_IS_EXECUTABLE)) {
+		g_debug("no %s, leaving gpgme to autodetect", spawn_helper);
+		return NULL;
+	}
+	g_debug("setting gpgme w32-inst-dir to %s", dirname);
+	gpgme_set_global_flag("w32-inst-dir", dirname);
+	return NULL;
+}
+
+/* Absolute path to a bundled gpg.exe, or NULL to let gpgme search the
+ * registry and PATH for a system GnuPG (e.g. Gpg4win). */
+static gchar *
+jcat_gpg_engine_win32_get_gpg_path(void)
+{
+	g_autofree gchar *dirname = jcat_gpg_engine_win32_get_module_dir();
+	g_autofree gchar *gpg_exe = NULL;
+
+	if (dirname == NULL)
+		return NULL;
+	gpg_exe = g_build_filename(dirname, "gpg.exe", NULL);
+	if (!g_file_test(gpg_exe, G_FILE_TEST_IS_EXECUTABLE))
+		return NULL;
+	return g_steal_pointer(&gpg_exe);
+}
+#endif
 
 static gboolean
 jcat_gpg_engine_add_public_key(JcatEngine *engine, const gchar *filename, GError **error)
@@ -87,6 +155,13 @@ jcat_gpg_engine_setup(JcatEngine *engine, GError **error)
 	if (self->ctx != NULL)
 		return TRUE;
 
+#ifdef _WIN32
+	{
+		static GOnce once = G_ONCE_INIT;
+		g_once(&once, jcat_gpg_engine_win32_init_once, NULL);
+	}
+#endif
+
 	/* startup gpgme */
 	rc = gpg_err_init();
 	if (rc != GPG_ERR_NO_ERROR) {
@@ -128,7 +203,18 @@ jcat_gpg_engine_setup(JcatEngine *engine, GError **error)
 		return FALSE;
 	}
 	g_debug("Using engine at %s", gpg_home);
+#ifdef _WIN32
+	{
+		g_autofree gchar *gpg_exe = jcat_gpg_engine_win32_get_gpg_path();
+		g_debug("using gpg binary %s", gpg_exe != NULL ? gpg_exe : "<autodetect>");
+		rc = gpgme_ctx_set_engine_info(self->ctx,
+					       GPGME_PROTOCOL_OpenPGP,
+					       gpg_exe,
+					       gpg_home);
+	}
+#else
 	rc = gpgme_ctx_set_engine_info(self->ctx, GPGME_PROTOCOL_OpenPGP, NULL, gpg_home);
+#endif
 	if (rc != GPG_ERR_NO_ERROR) {
 		g_set_error(error,
 			    G_IO_ERROR,
