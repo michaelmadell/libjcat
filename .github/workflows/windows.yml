@@ -40,8 +40,6 @@ jobs:
           glib2:p
           json-glib:p
           gnutls:p
-          gpgme:p
-          gnupg:p
           gobject-introspection:p
           vala:p
           nsis:p
@@ -49,7 +47,7 @@ jobs:
     - name: configure
       run: |
         meson setup build \
-          -Dgpg=true \
+          -Dgpg=false \
           -Dgnutls_pkcs7=true \
           -Dgnutls_ed25519=true \
           -Dintrospection=true \
