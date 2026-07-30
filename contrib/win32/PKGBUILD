@@ -16,13 +16,11 @@ arch=('any')
 mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
 url="https://github.com/hughsie/libjcat"
 license=('spdx:LGPL-2.1-or-later')
+# NOTE: OpenPGP support is disabled -- see the note above build()
 depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
          "${MINGW_PACKAGE_PREFIX}-glib2"
          "${MINGW_PACKAGE_PREFIX}-gnutls"
-         "${MINGW_PACKAGE_PREFIX}-gpgme"
-         "${MINGW_PACKAGE_PREFIX}-json-glib"
-         # runtime only: gpgme shells out to gpg.exe
-         "${MINGW_PACKAGE_PREFIX}-gnupg")
+         "${MINGW_PACKAGE_PREFIX}-json-glib")
 makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-meson"
              "${MINGW_PACKAGE_PREFIX}-ninja"
@@ -35,6 +33,15 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
 source=("${_realname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
 sha256sums=('SKIP')
 
+# OpenPGP (-Dgpg=true) is deliberately off. gpgme_op_import() returns success
+# having considered zero keys: gpg is spawned with a correct argv and homedir,
+# gpgme writes the whole key into the pipe, and gpg then exits without writing
+# to either its status or logger fd. Since --exit-on-status-write-error is
+# passed, that is what an unusable inherited handle looks like, and the handle
+# translation is done by gpgme-w32spawn.exe rather than by libjcat. The MSYS2
+# gpgme build configures --disable-fd-passing, which is the prime suspect.
+# contrib/win32/gpgme-import-test.c reproduces it without libjcat.
+# PKCS-7, ED25519 and the checksum engines are unaffected.
 build() {
   declare -a _extra_config
   if check_option "debug" "n"; then
@@ -48,7 +55,7 @@ build() {
       --prefix="${MINGW_PREFIX}" \
       --wrap-mode=nodownload \
       "${_extra_config[@]}" \
-      -Dgpg=true \
+      -Dgpg=false \
       -Dgnutls_pkcs7=true \
       -Dgnutls_ed25519=true \
       -Dintrospection=true \
@@ -70,10 +77,6 @@ check() {
 
 package() {
   DESTDIR="${pkgdir}" "${MINGW_PREFIX}"/bin/meson install -C "build-${MSYSTEM}"
-
-  # gpgme's process spawn helper is looked up next to the loaded module
-  install -Dm755 "${MINGW_PREFIX}/bin/gpgme-w32spawn.exe" \
-    "${pkgdir}${MINGW_PREFIX}/bin/gpgme-w32spawn.exe"
 
   install -Dm644 "${srcdir}/${_realname}-${pkgver}/LICENSE" \
     "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"

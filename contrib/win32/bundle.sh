@@ -41,14 +41,20 @@ for f in "${built[@]}"; do
 done
 
 # gpgme cannot spawn gpg without this helper, and looks for it beside the
-# module that loaded it -- see jcat-gpg-engine.c
-for helper in gpgme-w32spawn.exe gpg.exe gpgconf.exe; do
-	if [ -f "$PREFIX/bin/$helper" ]; then
-		install -m755 "$PREFIX/bin/$helper" "$OUT_DIR/bin/"
-	else
-		echo "note: $helper not found in $PREFIX/bin, OpenPGP may not work"
-	fi
-done
+# module that loaded it -- see jcat-gpg-engine.c. Only relevant when the build
+# actually linked gpgme, so decide from the import tables rather than guessing.
+if "$OBJDUMP" -p "$OUT_DIR"/bin/*.exe "$OUT_DIR"/bin/*.dll 2>/dev/null |
+	grep -qi 'libgpgme'; then
+	for helper in gpgme-w32spawn.exe gpg.exe gpgconf.exe; do
+		if [ -f "$PREFIX/bin/$helper" ]; then
+			install -m755 "$PREFIX/bin/$helper" "$OUT_DIR/bin/"
+		else
+			echo "note: $helper not found in $PREFIX/bin, OpenPGP may not work"
+		fi
+	done
+else
+	echo "note: built without gpgme, skipping the GnuPG helpers"
+fi
 
 # --- recursively resolve imports ---------------------------------------------
 # associative array acts as the visited set, so diamond dependencies (nearly
@@ -87,6 +93,42 @@ while [ ${#queue[@]} -gt 0 ]; do
 		queue+=("$OUT_DIR/bin/$dll")
 	done < <("$OBJDUMP" -p "$current" 2>/dev/null | sed -n 's/^\s*DLL Name:\s*//p')
 done
+
+# --- SDK: headers, import library, pkg-config -----------------------------------
+# A MinGW .dll.a is not consumable from MSVC; a consumer there needs an import
+# library generated from a .def. See PORTING-PLAN.md phase 5.
+SRC_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+if [ -f "$BUILD_DIR/libjcat/libjcat.dll.a" ]; then
+	install -Dm644 "$BUILD_DIR/libjcat/libjcat.dll.a" "$OUT_DIR/lib/libjcat.dll.a"
+
+	# mirror meson's install layout: jcat.h at the include root, the rest
+	# one level down under libjcat/. Read the list out of meson.build rather
+	# than globbing, so internal engine headers are not shipped as API.
+	install -Dm644 "$SRC_ROOT/libjcat/jcat.h" "$OUT_DIR/include/libjcat-1/jcat.h"
+	sed -n '/^jcat_headers = files(/,/^)/p' "$SRC_ROOT/libjcat/meson.build" |
+		grep -o "'[^']*\.h'" | tr -d "'" |
+		while read -r h; do
+			if [ -f "$SRC_ROOT/libjcat/$h" ]; then
+				install -Dm644 "$SRC_ROOT/libjcat/$h" \
+					"$OUT_DIR/include/libjcat-1/libjcat/$h"
+			fi
+		done
+	# jcat-version.h is generated, so it lives in the build tree
+	if [ -f "$BUILD_DIR/libjcat/jcat-version.h" ]; then
+		install -Dm644 "$BUILD_DIR/libjcat/jcat-version.h" \
+			"$OUT_DIR/include/libjcat-1/libjcat/jcat-version.h"
+	fi
+
+	# the generated .pc hardcodes the build prefix; make it relocatable so it
+	# still resolves wherever the user unzips this
+	pc=$(find "$BUILD_DIR" -name 'jcat.pc' -print -quit 2>/dev/null || true)
+	if [ -n "$pc" ]; then
+		mkdir -p "$OUT_DIR/lib/pkgconfig"
+		sed 's|^prefix=.*|prefix=${pcfiledir}/../..|' "$pc" \
+			> "$OUT_DIR/lib/pkgconfig/jcat.pc"
+	fi
+	echo "  staged SDK (headers, import library, pkg-config)"
+fi
 
 # --- licence compliance -------------------------------------------------------
 # LGPL and GPL components are being redistributed, so ship the texts
