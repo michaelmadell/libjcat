@@ -58,12 +58,25 @@ jcat_gpg_engine_win32_init_once(gpointer user_data)
 {
 	g_autofree gchar *dirname = jcat_gpg_engine_win32_get_module_dir();
 	g_autofree gchar *spawn_helper = NULL;
+	g_autofree gchar *gpg_exe = NULL;
 
 	if (dirname == NULL)
 		return NULL;
 	spawn_helper = g_build_filename(dirname, "gpgme-w32spawn.exe", NULL);
-	if (!g_file_test(spawn_helper, G_FILE_TEST_IS_EXECUTABLE)) {
-		g_debug("no %s, leaving gpgme to autodetect", spawn_helper);
+	gpg_exe = g_build_filename(dirname, "gpg.exe", NULL);
+
+	/* gpgme resolves gpgconf.exe and gpg.exe relative to this same directory,
+	 * and its only fallbacks are the Gpg4win registry key and
+	 * %ProgramFiles%\GNU\GnuPG. Overriding it with a directory that holds the
+	 * spawn helper but no gpg leaves the engine undiscoverable, so only take
+	 * over when we are shipping a complete GnuPG beside the library. In every
+	 * other case gpgme's own default -- the directory of its own DLL -- is
+	 * already correct. */
+	if (!g_file_test(spawn_helper, G_FILE_TEST_IS_EXECUTABLE) ||
+	    !g_file_test(gpg_exe, G_FILE_TEST_IS_EXECUTABLE)) {
+		g_debug("%s is not a self-contained GnuPG layout, "
+			"leaving gpgme to autodetect",
+			dirname);
 		return NULL;
 	}
 	g_debug("setting gpgme w32-inst-dir to %s", dirname);
@@ -216,12 +229,27 @@ jcat_gpg_engine_setup(JcatEngine *engine, GError **error)
 	rc = gpgme_ctx_set_engine_info(self->ctx, GPGME_PROTOCOL_OpenPGP, NULL, gpg_home);
 #endif
 	if (rc != GPG_ERR_NO_ERROR) {
+		/* not a protocol problem: this is what a missing or unusable gpg
+		 * binary looks like, and sharing the wording with
+		 * gpgme_set_protocol() above sends you looking in the wrong place */
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
-			    "failed to set protocol: %s",
+			    "failed to set engine info, is gpg installed and found? %s",
 			    gpgme_strerror(rc));
 		return FALSE;
+	}
+
+	/* record which binary we actually ended up with -- gpgme's search order is
+	 * not obvious and this is the first thing you want to know when it fails */
+	for (gpgme_engine_info_t info = gpgme_ctx_get_engine_info(self->ctx); info != NULL;
+	     info = info->next) {
+		if (info->protocol != GPGME_PROTOCOL_OpenPGP)
+			continue;
+		g_debug("gpgme OpenPGP engine: %s (v%s), homedir %s",
+			info->file_name != NULL ? info->file_name : "(none)",
+			info->version != NULL ? info->version : "(unknown)",
+			info->home_dir != NULL ? info->home_dir : "(default)");
 	}
 
 	/* enable armor mode */
