@@ -1,0 +1,28 @@
+# Cross file for building Windows binaries on Fedora.
+#   sudo dnf install mingw64-gcc mingw64-glib2 mingw64-json-glib \
+#                    mingw64-gnutls mingw64-pkg-config wine
+#   meson setup build-win64 --cross-file contrib/win32/mingw64-fedora.cross
+#
+# NOTE: Fedora has no mingw64-gpgme, so -Dgpg=false is required here. Use the
+# MSYS2 build (contrib/win32/PKGBUILD) if you need OpenPGP support.
+[binaries]
+c = 'x86_64-w64-mingw32-gcc'
+cpp = 'x86_64-w64-mingw32-g++'
+ar = 'x86_64-w64-mingw32-ar'
+strip = 'x86_64-w64-mingw32-strip'
+windres = 'x86_64-w64-mingw32-windres'
+pkg-config = 'x86_64-w64-mingw32-pkg-config'
+exe_wrapper = 'wine'
+
+[properties]
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'windows'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
+
+[built-in options]
+# stop meson appending the Unix-style prefix to the DLL search paths
+prefix = '/'

@@ -1,0 +1,32 @@
+libjcat Release Notes
+
+1. Write NEWS entries for libjcat in the same format as usual.
+
+git shortlog 0.2.6.. | grep -i -v trivial | grep -v Merge > NEWS.new
+
+Version 0.2.7
+~~~~~~~~~~~~~
+Released: 2026-xx-xx
+
+New Features:
+Bugfixes:
+
+
+Commit changes to git:
+
+# MAKE SURE THESE ARE CORRECT
+export release_ver="0.2.7"
+
+git commit -a -m "Release libjcat ${release_ver}"
+git tag -s -f -m "Release libjcat ${release_ver}" "${release_ver}"
+ninja dist
+gpg -b -a meson-dist/libjcat-${release_ver}.tar.xz
+git push --tags
+git push
+
+Upload release artifacts via https://github.com/hughsie/libjcat/tags
+
+Do post release version bump in meson.build
+
+git commit -a -m "trivial: post release version bump"
+git push

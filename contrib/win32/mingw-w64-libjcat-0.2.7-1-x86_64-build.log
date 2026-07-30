@@ -1,0 +1,221 @@
+The Meson build system
+Version: 1.11.2
+Source dir: D:/JCAT/libjcat/contrib/win32/src/libjcat-0.2.7
+Build dir: D:/JCAT/libjcat/contrib/win32/src/build-UCRT64
+Build type: native build
+Project name: libjcat
+Project version: 0.2.7
+C compiler for the host machine: gcc (gcc 16.1.0 "gcc (Rev5, Built by MSYS2 project) 16.1.0")
+C linker for the host machine: gcc ld.bfd 2.47.20260726
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Compiler for C supports arguments -Wfatal-errors: YES 
+Compiler for C supports arguments -Wno-nonnull-compare: YES 
+Compiler for C supports arguments -Waggregate-return: YES 
+Compiler for C supports arguments -Wunused: YES 
+Compiler for C supports arguments -Warray-bounds: YES 
+Compiler for C supports arguments -Wcast-align: YES 
+Compiler for C supports arguments -Wclobbered: YES 
+Compiler for C supports arguments -Wdeclaration-after-statement: YES 
+Compiler for C supports arguments -Wduplicated-branches: YES 
+Compiler for C supports arguments -Wduplicated-cond: YES 
+Compiler for C supports arguments -Wempty-body: YES 
+Compiler for C supports arguments -Wformat=2: YES 
+Compiler for C supports arguments -Wformat-nonliteral: YES 
+Compiler for C supports arguments -Wformat-security: YES 
+Compiler for C supports arguments -Wformat-signedness: YES 
+Compiler for C supports arguments -Wignored-qualifiers: YES 
+Compiler for C supports arguments -Wimplicit-function-declaration: YES 
+Compiler for C supports arguments -Wincompatible-pointer-types-discards-qualifiers: NO 
+Compiler for C supports arguments -Winit-self: YES 
+Compiler for C supports arguments -Wlogical-op: YES 
+Compiler for C supports arguments -Wmaybe-uninitialized: YES 
+Compiler for C supports arguments -Wmissing-declarations: YES 
+Compiler for C supports arguments -Wmissing-format-attribute: YES 
+Compiler for C supports arguments -Wmissing-include-dirs: YES 
+Compiler for C supports arguments -Wmissing-noreturn: YES 
+Compiler for C supports arguments -Wmissing-parameter-type: YES 
+Compiler for C supports arguments -Wmissing-prototypes: YES 
+Compiler for C supports arguments -Wnested-externs: YES 
+Compiler for C supports arguments -Wno-cast-function-type: YES 
+Compiler for C supports arguments -Wno-error=cpp: YES 
+Compiler for C supports arguments -Wno-unknown-pragmas: YES 
+Compiler for C supports arguments -Wno-discarded-qualifiers: YES 
+Compiler for C supports arguments -Wno-missing-field-initializers: YES 
+Compiler for C supports arguments -Wno-strict-aliasing: YES 
+Compiler for C supports arguments -Wno-suggest-attribute=format: YES 
+Compiler for C supports arguments -Wno-unused-parameter: YES 
+Compiler for C supports arguments -Wnull-dereference: YES 
+Compiler for C supports arguments -Wold-style-definition: YES 
+Compiler for C supports arguments -Woverride-init: YES 
+Compiler for C supports arguments -Wpointer-arith: YES 
+Compiler for C supports arguments -Wredundant-decls: YES 
+Compiler for C supports arguments -Wreturn-type: YES 
+Compiler for C supports arguments -Wshadow: YES 
+Compiler for C supports arguments -Wsign-compare: YES 
+Compiler for C supports arguments -Wstrict-aliasing: YES 
+Compiler for C supports arguments -Wstrict-prototypes: YES 
+Compiler for C supports arguments -Wswitch-default: YES 
+Compiler for C supports arguments -Wtype-limits: YES 
+Compiler for C supports arguments -Wundef: YES 
+Compiler for C supports arguments -Wuninitialized: YES 
+Compiler for C supports arguments -Wunused-but-set-variable: YES 
+Compiler for C supports arguments -Wunused-variable: YES 
+Compiler for C supports arguments -Wwrite-strings: YES 
+Compiler for C supports link arguments -Wl,--dynamicbase: YES 
+Compiler for C supports link arguments -Wl,--nxcompat: YES 
+Compiler for C supports link arguments -Wl,--high-entropy-va: YES 
+Compiler for C supports link arguments -Wl,--no-insert-timestamp: YES 
+Program diff found: YES (C:\msys64\usr\bin/diff.EXE)
+Found pkg-config: YES (C:\msys64\ucrt64\bin/pkg-config.EXE) 3.0.4
+Run-time dependency gio-2.0 found: YES 2.88.2
+Library intl found: YES
+Found CMake: C:\msys64\usr\bin/cmake.EXE (4.4.0)
+WARNING: CMake Toolchain: Failed to determine CMake compilers state
+Run-time dependency gio-unix-2.0 found: NO  (tried pkg-config)
+Run-time dependency json-glib-1.0 found: YES 1.10.8
+Run-time dependency gnutls found: YES 3.8.13
+Header "gnutls/gnutls.h" has symbol "GNUTLS_SIGN_MLDSA87" with dependency gnutls: YES 
+Dependency gnutls for host machine found: YES 3.8.13 (cached)
+Configuring config.h using configuration
+Configuring libjcat.test using configuration
+Program certtool found: YES (C:\msys64\ucrt64\bin/certtool.EXE)
+Configuring jcat-version.h using configuration
+Found pkg-config: YES (C:\msys64\ucrt64\bin/pkg-config.EXE) 3.0.4
+Run-time dependency gobject-introspection-1.0 found: YES 1.86.0
+Dependency gobject-introspection-1.0 for host machine found: YES 1.86.0 (cached)
+Program C:/msys64/ucrt64/bin/g-ir-scanner.exe found: YES (C:/msys64/ucrt64/bin/g-ir-scanner.exe)
+Dependency gobject-introspection-1.0 for host machine found: YES 1.86.0 (cached)
+Program C:/msys64/ucrt64/bin/g-ir-compiler.exe found: YES (C:/msys64/ucrt64/bin/g-ir-compiler.exe)
+Program vapigen found: YES (C:\msys64\ucrt64\bin/vapigen.EXE)
+Program python3 found: YES (C:\msys64\ucrt64\bin/python3.EXE)
+Configuring jcat-tool.rc using configuration
+Windows resource compiler: GNU windres (GNU Binutils) 2.47.20260726
+Build targets in project: 12
+
+libjcat 0.2.7
+
+  Dependencies
+    gnutls        : 3.8.13
+
+  User defined options
+    buildtype     : plain
+    gnutls_ed25519: true
+    gnutls_pkcs7  : true
+    gpg           : false
+    gtkdoc        : false
+    introspection : true
+    man           : false
+    prefix        : /ucrt64
+    tests         : true
+    vapi          : true
+    wrap_mode     : nodownload
+
+Found ninja-1.13.2 at C:\msys64\ucrt64\bin/ninja.EXE
+ninja: Entering directory `D:/JCAT/libjcat/contrib/win32/src/build-UCRT64'
+[1/46] Generating data/tests/test-privkey.pem with a custom command
+Generating a 3072 bit RSA private key...
+[2/46] Generating data/tests/pki/test.pem with a custom command
+Generating a self signed certificate...
+X.509 Certificate Information:
+	Version: 3
+	Serial Number (hex): 608ea5ca68bec039f4c8d499ee08a6ad282d0b0f
+	Validity:
+		Not Before: Thu Jul 30 12:36:53 UTC 2026
+error: gmtime_r (-769665)
+	Subject: O=Hughski Limited
+	Subject Public Key Algorithm: RSA
+	Algorithm Security Level: High (3072 bits)
+		Modulus (bits 3072):
+			00:ef:a1:65:28:b3:40:d3:1a:5a:79:c9:80:18:b0:63
+			a4:65:ed:bf:eb:99:a9:13:fc:6f:83:f1:ad:95:16:4e
+			83:4e:6f:02:83:a8:ed:0a:7d:54:e7:e3:98:7d:3f:21
+			68:5e:ae:ee:f6:55:4e:c0:15:f0:03:b3:8a:a9:ea:a2
+			9d:05:e8:b0:c3:51:33:84:45:9b:67:67:85:52:2f:56
+			17:5c:8c:02:47:14:b8:30:35:8e:1e:d6:77:e6:10:30
+			e2:1e:21:28:e5:94:21:c0:4f:c6:38:72:b3:d6:3e:0a
+			a1:32:96:72:c2:fe:e5:a8:70:e0:22:20:3e:47:57:6b
+			cf:45:dc:c1:56:82:2b:31:e6:16:ca:6f:fe:32:4f:fb
+			08:63:00:0c:9f:21:d3:2d:46:fe:a0:6c:34:9e:1a:a0
+			d9:e2:31:18:c4:bf:21:c1:ce:f8:ba:d7:b7:3e:4e:09
+			ae:dd:3d:05:0b:78:74:76:0c:98:8f:8e:f7:bb:2c:8f
+			24:92:3b:0a:ea:dd:d0:d4:a0:cc:b1:c6:e0:c1:aa:14
+			23:6b:a8:22:7f:6c:ba:22:85:e6:a1:be:ad:92:1e:cf
+			6a:92:86:14:32:d7:b8:e2:71:60:49:56:9c:e5:be:64
+			23:52:6f:d1:0a:4c:3f:88:d8:67:e8:bf:5f:ba:81:6e
+			0e:0e:f2:b0:3e:30:a8:7a:d5:e1:75:b4:46:d7:86:b7
+			65:20:8c:15:bf:93:f7:3a:2e:a5:e1:ce:bf:9b:fa:66
+			c2:e2:cc:2c:8e:92:1b:ae:75:b4:41:f3:ff:fc:ac:19
+			a2:16:18:1a:56:6d:64:43:44:52:3c:45:13:32:f6:21
+			65:62:df:32:e4:80:aa:ba:e1:1d:b0:ec:7f:4a:11:91
+			18:b3:1d:14:89:65:53:92:e8:6d:5e:6a:cd:19:a4:35
+			ae:78:78:6d:a9:63:5d:4f:46:b4:5e:c3:38:a6:c4:17
+			d6:8f:44:71:48:0e:d9:67:fb:e6:00:b1:2b:05:2a:75
+			f1
+		Exponent (bits 24):
+			01:00:01
+	Extensions:
+		Basic Constraints (critical):
+			Certificate Authority (CA): FALSE
+		Subject Alternative Name (not critical):
+			RFC822Name: info@hughski.com
+		Key Usage (critical):
+			Digital signature.
+		Subject Key Identifier (not critical):
+			0f7dea985e60bf11031c561c0292d08a5ace4b8e
+Other Information:
+	Public Key ID:
+		sha1:0f7dea985e60bf11031c561c0292d08a5ace4b8e
+		sha256:ef4ec91e6cd74099f59fb9a0d55f3363b2818c0231fb46d8135e5e2307c931ff
+	Public Key PIN:
+		pin-sha256:707JHmzXQJn1n7mg1V8zY7KBjAIx+0bYE15eIwfJMf8=
+
+
+
+Signing certificate...
+[3/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-version.c.obj
+[4/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-common.c.obj
+[5/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-sha1-engine.c.obj
+[6/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-blob.c.obj
+[7/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-sha256-engine.c.obj
+[8/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-context.c.obj
+[9/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-engine.c.obj
+[10/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-bt-verifier.c.obj
+[11/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-sha512-engine.c.obj
+[12/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-result.c.obj
+[13/46] Generating data/tests/colorhug/firmware.bin.p7c with a custom command
+[14/46] Generating data/tests/colorhug/firmware.bin.sha256.p7c with a custom command
+[15/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-bt-checkpoint.c.obj
+[16/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-file.c.obj
+[17/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-gnutls-common.c.obj
+[18/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-item.c.obj
+[19/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-gnutls-pkcs7-engine.c.obj
+[20/46] Compiling C object libjcat/libjcat-1.dll.p/jcat-gnutls-ed25519-engine.c.obj
+[21/46] Compiling Windows resource libjcat/jcat-tool.rc
+[22/46] Compiling C object libjcat/jcat-tool.exe.p/jcat-common.c.obj
+[23/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-engine.c.obj
+[24/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-common.c.obj
+[25/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-blob.c.obj
+[26/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-context.c.obj
+[27/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-sha1-engine.c.obj
+[28/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-bt-checkpoint.c.obj
+[29/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-sha256-engine.c.obj
+[30/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-result.c.obj
+[31/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-bt-verifier.c.obj
+[32/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-file.c.obj
+[33/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-item.c.obj
+[34/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-self-test.c.obj
+[35/46] Linking target libjcat/libjcat-1.dll
+[36/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-sha512-engine.c.obj
+[37/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-gnutls-common.c.obj
+[38/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-gnutls-pkcs7-engine.c.obj
+[39/46] Compiling C object libjcat/jcat-self-test.exe.p/jcat-gnutls-ed25519-engine.c.obj
+[40/46] Compiling C object libjcat/jcat-tool.exe.p/jcat-tool.c.obj
+[41/46] Linking target libjcat/jcat-self-test.exe
+[42/46] Generating symbol file libjcat/libjcat-1.dll.p/libjcat-1.dll.symbols
+[43/46] Linking target libjcat/jcat-tool.exe
+[44/46] Generating libjcat/Jcat-1.0.gir with a custom command (wrapped by meson to set PATH, to set env)
+[45/46] Generating libjcat/Jcat-1.0.typelib with a custom command (wrapped by meson to set PATH)
+[46/46] Generating libjcat/jcat.vapi with a custom command (wrapped by meson to set PATH)
+INFO: autodetecting backend as ninja
+INFO: calculating backend command to run: C:\msys64\ucrt64\bin/ninja.EXE -C D:/JCAT/libjcat/contrib/win32/src/build-UCRT64

@@ -1,0 +1,221 @@
+Version 0.2.6
+~~~~~~~~~~~~~
+Released: 2026-04-14
+
+New Features:
+ - Allow disabling time checks when not using a trust list (Richard Hughes)
+
+Bugfixes:
+ - Do not allow multiple items with the same ID (Richard Hughes)
+ - Do not try to change the GnuTLS system-wide config (Richard Hughes)
+ - Require at least one successful verification regardless of flags (Richard Hughes)
+ - Return the correct error code using the gnutls rc (Richard Hughes)
+ - Skip the PQ tests if the GnuTLS config is not malleable (Richard Hughes)
+ - Use the correct flag when self-verifying PQC certs (Richard Hughes)
+
+Version 0.2.5
+~~~~~~~~~~~~~
+Released: 2025-10-04
+
+Bugfixes:
+ - Fix a small memory leak when verifying using PKCS#7 (Richard Hughes)
+
+Version 0.2.4
+~~~~~~~~~~~~~
+Released: 2025-10-01
+
+New Features:
+ - Add GnuTLS support for Post-Quantum PKCS#7 certs (Richard Hughes)
+ - Add OpenSSL PKCS#7 backend for RSA certs (Colin Kinloch)
+
+Bugfixes:
+ - Allow multiple PKCS#7 certs to be verified (Richard Hughes)
+ - Allow specifying --public-key and --public-keys multiple times (Richard Hughes)
+
+Version 0.2.3
+~~~~~~~~~~~~~
+Released: 2025-02-03
+
+Bugfixes:
+ - Do not close the base stream when using jcat_file_import_stream() (Richard Hughes)
+ - Skip ed25519 part of a test with -Ded25519=false (Heiko Becker)
+
+Version 0.2.2
+~~~~~~~~~~~~~
+Released: 2024-10-14
+
+New Features:
+ - Add bt-logindex blob kind (Richard Hughes)
+
+Bugfixes:
+ - Increase test coverage for ED25519 support (Daiki Ueno)
+ - Save the auto-generated private key with 0600 file permissions (Richard Hughes)
+ - Switch ED25519 support to not directly using Nettle (Daiki Ueno)
+
+Version 0.2.1
+~~~~~~~~~~~~~
+Released: 2024-01-20
+
+Bugfixes:
+ - Do not dedupe sig and sig-of-checksum when loading (Richard Hughes)
+ - Fix the installed tests (Mario Limonciello)
+ - Show the sig-of-checksum results clearer on the CLI (Richard Hughes)
+
+Version 0.2.0
+~~~~~~~~~~~~~
+Released: 2024-01-02
+
+New Features:
+ - Add support for verifying firmware transparency checkpoints (Richard Hughes)
+ - Add various bitcounting functions for future use (Joe Qian)
+ - Allow creating and validating SHA512 checksums (Richard Hughes)
+ - Allow verifying the checksum of a payload (Richard Hughes)
+
+Bugfixes:
+ - Sprinkle __attribute__((nonnull)) to give a little more compile-time safety (Richard Hughes)
+
+Version 0.1.14
+~~~~~~~~~~~~~~
+Released: 2023-06-08
+
+Bugfixes:
+ - Fix header includes (Daisuke Fujimura)
+ - Fix prefix of LIBJCAT_CHECK_VERSION (Richard Hughes)
+ - Use project_source_root to fix building as a subproject (Richard Hughes)
+
+Version 0.1.13
+~~~~~~~~~~~~~~
+Released: 2023-02-22
+
+New Features:
+ - Add support for SHA512 checksums (Richard Hughes)
+ - Add the ability to add and remove support for blob types (#72) (Richard Hughes)
+
+Bugfixes:
+ - Fix header includes for clang-tidy (Richard Hughes)
+ - Show the expected SHA checksum in the error (Richard Hughes)
+
+Version 0.1.12
+~~~~~~~~~~~~~~
+Released: 2022-09-11
+
+Bugfixes:
+ - Correctly export the AliasIds in all cases (Richard Hughes)
+ - Install installed-test firmware.bin.ed25519 (Jan Tojnar)
+ - Predate test cert activation date by 1 day (David Bonner)
+
+Version 0.1.11
+~~~~~~~~~~~~~~
+Released: 2022-03-22
+
+New Features:
+ - Allow the user to get the runtime library version (Richard Hughes)
+
+Bugfixes:
+ - Fix incorrect certtool being called on macOS (Richard Hughes)
+
+Version 0.1.10
+~~~~~~~~~~~~~~
+Released: 2022-02-16
+
+New Features:
+ - Add ED25519 support (Richard Hughes)
+ - Define three more types used for the firmware transparency log (Richard Hughes)
+
+Bugfixes:
+ - Include the pkgconfig variables in the subproject dependency (Richard Hughes)
+ - Drop the use of setuptools in the test script for regenerating ld version file (Eli Schwartz)
+ - Use the correct lookup method for the python3 script interpreter (Eli Schwartz)
+
+Version 0.1.9
+~~~~~~~~~~~~~
+Released: 2021-11-28
+
+New Features:
+ - Set which backends are supported in the pkgconfig file (Richard Hughes)
+ - Use -Dcli=false to reduce the install size (Richard Hughes)
+
+Bugfixes:
+ - Return an error if we try to self-sign no bytes of data (Richard Hughes)
+ - Show a more accurate output when not all engines are enabled (Richard Hughes)
+
+Version 0.1.8
+~~~~~~~~~~~~~
+Released: 2021-05-24
+
+Bugfixes:
+ - Fix a warning when used in a subproject (Richard Hughes)
+ - Fix compilation on FreeBSD (Richard Hughes)
+
+Version 0.1.7
+~~~~~~~~~~~~~
+Released: 2021-05-06
+
+New Features:
+ - Do not use help2man to build manual pages (Richard Hughes)
+
+Version 0.1.6
+~~~~~~~~~~~~~
+Released: 2021-02-08
+
+New Features:
+ - Fall back to the AliasId for validation (Richard Hughes)
+
+Bugfixes:
+ - Fix jcat_context_verify_blob() to use self verify for checksums (Richard Hughes)
+
+Version 0.1.5
+~~~~~~~~~~~~~
+Released: 2021-01-08
+
+New Features:
+ - Allow verifying expired certificates with an additional argument (Richard Hughes)
+ - Allow compiling json-glib as a subproject (Richard Hughes)
+
+Version 0.1.4
+~~~~~~~~~~~~~
+Released: 2020-10-23
+
+Bugfixes:
+ - Export the old JCatEngine property to preserve internal ABI (Richard Hughes)
+ - Do not fail verification if compiled without an engine (Mario Limonciello)
+
+Version 0.1.3
+~~~~~~~~~~~~~
+Released: 2020-06-16
+
+New Features:
+ - Export the JcatBlobKind and JcatBlobMethod on the result (Richard Hughes)
+
+Bugfixes:
+ - Validate that gpgme_op_verify_result() returned at least one signature (Richard Hughes)
+
+Version 0.1.2
+~~~~~~~~~~~~~
+Released: 2020-04-27
+
+Bugfixes:
+ - Lower the meson dep version for RHEL 8 (Richard Hughes)
+ - Check for Python modules explicitly during build (Jan Tojnar)
+
+Version 0.1.1
+~~~~~~~~~~~~~
+Released: 2020-04-14
+
+New Features:
+ - Allow adding an item ID 'alias' (Richard Hughes)
+
+Bugfixes:
+ - Make the installed tests actually work (Richard Hughes)
+ - Run generate-version-script.py using the same Python as meson itself (Marek Szuba)
+ - Only pass --version-script to linker when supported (Jan Tojnar)
+ - Sign a simple string instead of /etc/machine-id (Simon McVittie)
+
+Version 0.1.0
+~~~~~~~~~~~~~
+Released: 2020-03-23
+
+Notes:
+ - This is the first release of libjcat, a library for creating a modifying
+   detached signature collections, a.k.a. Jcat files.
+ - See https://github.com/hughsie/libjcat/blob/main/README.md for information.

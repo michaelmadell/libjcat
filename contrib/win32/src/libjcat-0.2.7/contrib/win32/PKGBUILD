@@ -1,0 +1,83 @@
+# Maintainer: <you>
+# MSYS2 PKGBUILD for mingw-w64-libjcat.
+#
+# Build with:  makepkg-mingw -sCLf
+# Install:     pacman -U mingw-w64-*-libjcat-*.pkg.tar.zst
+#
+# Intended for submission to https://github.com/msys2/MINGW-packages
+
+_realname=libjcat
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.2.7
+pkgrel=1
+pkgdesc="Library and tool for reading and writing Jcat files (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url="https://github.com/hughsie/libjcat"
+license=('spdx:LGPL-2.1-or-later')
+# NOTE: OpenPGP support is disabled -- see the note above build()
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-glib2"
+         "${MINGW_PACKAGE_PREFIX}-gnutls"
+         "${MINGW_PACKAGE_PREFIX}-json-glib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-gobject-introspection"
+             "${MINGW_PACKAGE_PREFIX}-vala"
+             # certtool, used to generate test certificates
+             "${MINGW_PACKAGE_PREFIX}-gnutls"
+             "diffutils")
+source=("${_realname}-${pkgver}.tar.gz::${url}/archive/${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+# OpenPGP (-Dgpg=true) is deliberately off. gpgme_op_import() returns success
+# having considered zero keys: gpg is spawned with a correct argv and homedir,
+# gpgme writes the whole key into the pipe, and gpg then exits without writing
+# to either its status or logger fd. Since --exit-on-status-write-error is
+# passed, that is what an unusable inherited handle looks like, and the handle
+# translation is done by gpgme-w32spawn.exe rather than by libjcat. The MSYS2
+# gpgme build configures --disable-fd-passing, which is the prime suspect.
+# contrib/win32/gpgme-import-test.c reproduces it without libjcat.
+# PKCS-7, ED25519 and the checksum engines are unaffected.
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("--buildtype=plain")
+  else
+    _extra_config+=("--buildtype=debug")
+  fi
+
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}"/bin/meson setup \
+      --prefix="${MINGW_PREFIX}" \
+      --wrap-mode=nodownload \
+      "${_extra_config[@]}" \
+      -Dgpg=false \
+      -Dgnutls_pkcs7=true \
+      -Dgnutls_ed25519=true \
+      -Dintrospection=true \
+      -Dvapi=true \
+      -Dman=false \
+      -Dgtkdoc=false \
+      -Dtests=true \
+      "build-${MSYSTEM}" \
+      "${_realname}-${pkgver}"
+
+  "${MINGW_PREFIX}"/bin/meson compile -C "build-${MSYSTEM}"
+}
+
+check() {
+  # the self test creates a keyring under $XDG_DATA_HOME; keep it out of $HOME
+  XDG_DATA_HOME="${srcdir}/check-home" \
+    "${MINGW_PREFIX}"/bin/meson test -C "build-${MSYSTEM}" --print-errorlogs
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}"/bin/meson install -C "build-${MSYSTEM}"
+
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

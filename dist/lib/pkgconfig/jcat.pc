@@ -1,0 +1,14 @@
+prefix=${pcfiledir}/../..
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+supported_pkcs7=1
+supported_ed25519=1
+
+Name: libjcat
+Description: libjcat is a library to read Jcat files
+Version: 0.2.7
+Requires: gio-2.0 >=  2.45.8, json-glib-1.0 >=  1.1.1
+Requires.private: gnutls >=  3.6.0
+Libs: -L${libdir} -ljcat
+Cflags: -I${includedir}/libjcat-1

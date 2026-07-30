@@ -1,0 +1,9 @@
+ninja: Entering directory `D:/JCAT/libjcat/contrib/win32/src/build-UCRT64'
+[1/1] Generating libjcat/jcat_mapfile with a custom command (wrapped by meson to set PATH)
+1/2 libjcat:jcat-exported-api OK              0.26s
+2/2 libjcat:jcat-self-test    OK              1.23s
+
+Ok:                2   
+Fail:              0   
+
+Full log written to D:/JCAT/libjcat/contrib/win32/src/build-UCRT64/meson-logs/testlog.txt

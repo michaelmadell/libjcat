@@ -1,0 +1,129 @@
+name: windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Native build under MSYS2. This is the reference Windows build: it is the
+  # only one that exercises the real runtime (no Wine) and has gpgme available.
+  msys2:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # ucrt64 is the modern default; mingw64 kept for msvcrt consumers
+        sys: [ucrt64, mingw64]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: actions/checkout@v6.0.2
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.sys }}
+        update: true
+        install: >-
+          diffutils
+        pacboy: >-
+          cc:p
+          meson:p
+          ninja:p
+          pkgconf:p
+          glib2:p
+          json-glib:p
+          gnutls:p
+          gobject-introspection:p
+          vala:p
+          nsis:p
+
+    - name: configure
+      run: |
+        meson setup build \
+          -Dgpg=false \
+          -Dgnutls_pkcs7=true \
+          -Dgnutls_ed25519=true \
+          -Dintrospection=true \
+          -Dvapi=true \
+          -Dtests=true \
+          -Dman=false \
+          -Dgtkdoc=false \
+          --prefix=/tmp/jcat-prefix
+
+    - name: build
+      run: meson compile -C build
+
+    - name: test
+      # keep the generated keyring out of the runner's roaming profile
+      env:
+        XDG_DATA_HOME: /tmp/jcat-test-home
+      run: meson test -C build --print-errorlogs
+
+    - name: install
+      run: meson install -C build
+
+    - name: bundle standalone distribution
+      run: contrib/win32/bundle.sh build dist
+
+    - name: smoke test the bundle in a clean environment
+      shell: cmd
+      # deliberately not the MSYS2 shell: PATH must not contain the toolchain,
+      # otherwise a missing DLL in the bundle would go unnoticed
+      run: |
+        set PATH=%SystemRoot%\system32;%SystemRoot%
+        dist\bin\jcat-tool.exe --version || exit /b 1
+        echo hello > firmware.bin
+        dist\bin\jcat-tool.exe self-sign firmware.jcat firmware.bin --kind sha256 || exit /b 1
+        dist\bin\jcat-tool.exe info firmware.jcat || exit /b 1
+        dist\bin\jcat-tool.exe verify firmware.jcat firmware.bin --kind sha256 || exit /b 1
+
+    - name: build installer
+      if: matrix.sys == 'ucrt64'
+      run: |
+        VERSION=$(meson introspect build --projectinfo | python -c 'import json,sys; print(json.load(sys.stdin)["version"])')
+        makensis -DVERSION=$VERSION -DSRCDIR=../../dist contrib/win32/jcat-tool.nsi
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: jcat-tool-${{ matrix.sys }}
+        path: |
+          dist/
+          contrib/win32/*-setup.exe
+        if-no-files-found: error
+
+  # Cross build from Linux. Cheaper than the native job and catches most
+  # portability regressions, but has no gpgme so it cannot cover the GPG engine.
+  mingw-cross:
+    runs-on: ubuntu-latest
+    container: fedora:41
+    steps:
+    - uses: actions/checkout@v6.0.2
+    - name: deps
+      run: |
+        dnf -y install diffutils meson ninja-build git-core wine \
+          mingw64-gcc mingw64-glib2 mingw64-gnutls mingw64-json-glib \
+          mingw64-pkg-config mingw64-winpthreads
+    - name: configure
+      run: |
+        meson setup build-win64 \
+          --cross-file contrib/win32/mingw64-fedora.cross \
+          -Dgpg=false \
+          -Dintrospection=false \
+          -Dvapi=false \
+          -Dman=false \
+          -Dgtkdoc=false \
+          -Dtests=true
+    - name: build
+      run: meson compile -C build-win64
+    - name: test under wine
+      env:
+        WINEPATH: /usr/x86_64-w64-mingw32/sys-root/mingw/bin
+        WINEDEBUG: '-all'
+      run: meson test -C build-win64 --print-errorlogs

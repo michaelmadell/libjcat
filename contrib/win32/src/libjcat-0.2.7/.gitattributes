@@ -1,0 +1,6 @@
+# The test fixtures are signed over their exact bytes: SHA-256 checksums,
+# detached PKCS-7 and GPG signatures, and the binary transparency checkpoints
+# in data/tests/ all become invalid if any EOL translation happens on checkout.
+# Git for Windows enables core.autocrlf by default, so be explicit here rather
+# than relying on each developer's config.
+* -text

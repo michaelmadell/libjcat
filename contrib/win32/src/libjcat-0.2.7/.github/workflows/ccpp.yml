@@ -1,0 +1,38 @@
+name: libjcat
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  gcc:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6.0.2
+    - uses: actions/setup-python@v6
+    - name: deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+        gnutls-bin \
+        gobject-introspection \
+        gtk-doc-tools \
+        libgirepository1.0-dev \
+        libglib2.0-dev \
+        libglib2.0-dev-bin \
+        libgnutls28-dev \
+        libgpgme11-dev \
+        libjson-glib-dev \
+        pkg-config \
+        shared-mime-info \
+        valac
+    - name: meson
+      uses: BSFishy/meson-build@v1.0.3
+      with:
+        action: test
+        directory: _build
+        setup-options: -Db_coverage=false -Dopenssl_pkcs7=true
+        options: --verbose
+        meson-version: 0.56.0
