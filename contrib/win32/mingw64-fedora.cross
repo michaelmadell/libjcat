@@ -14,15 +14,15 @@ windres = 'x86_64-w64-mingw32-windres'
 pkg-config = 'x86_64-w64-mingw32-pkg-config'
 
 [properties]
-+# No exe_wrapper. Meson runs a compiled binary through the wrapper during its
-+# compiler sanity check, so naming wine here makes configuration fail outright
-+# wherever wine cannot start -- a container with no HOME or prefix, for
-+# instance, which is exactly what CI is. Declaring that a wrapper is needed but
-+# providing none makes meson skip running things instead, which is what a
-+# build-only cross check wants. To run the test suite under wine, add
-+#   exe_wrapper = 'wine'
-+# locally, after checking that `wine --version` works in that environment.
- needs_exe_wrapper = true
+# No exe_wrapper. Meson runs a compiled binary through the wrapper during its
+# compiler sanity check, so naming wine here makes configuration fail outright
+# wherever wine cannot start -- a container with no HOME or prefix, for
+# instance, which is exactly what CI is. Declaring that a wrapper is needed but
+# providing none makes meson skip running things instead, which is what a
+# build-only cross check wants. To run the test suite under wine, add
+#   exe_wrapper = 'wine'
+# locally, after checking that `wine --version` works in that environment.
+needs_exe_wrapper = true
 
 [host_machine]
 system = 'windows'
