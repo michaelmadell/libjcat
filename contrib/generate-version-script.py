@@ -139,4 +139,8 @@ if __name__ == "__main__":
         for override_symbol, override_version in args.override:
             ld.overrides[override_symbol] = override_version
     ld.import_gir(argv[1])
-    open(argv[2], "w").write(ld.render())
+    # newline="" prevents Python's text mode from turning every \n into \r\n
+    # on Windows, which would make the generated file differ from the
+    # checked-in LF version on every line
+    with open(argv[2], "w", newline="\n") as f:
+        f.write(ld.render())

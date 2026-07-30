@@ -266,6 +266,29 @@ if get_option('tests')
     test_deps += colorhug_pkcs7_signature
     test_deps += colorhug_pkcs7_signature_hash
   endif
+
+  # gpgme hands data to gpg over inherited handles, and on Windows that
+  # translation is done by a helper it looks for beside the module using it --
+  # here the build directory. Without the helper every operation silently
+  # transfers nothing: gpg runs, reads no input, and reports zero keys
+  # considered instead of failing, so the import assert fires with no clue why.
+  if host_machine.system() == 'windows' and get_option('gpg')
+    gpgme_w32spawn = find_program('gpgme-w32spawn', required : false)
+    if gpgme_w32spawn.found()
+      test_deps += custom_target('gpgme-w32spawn.exe',
+        output : 'gpgme-w32spawn.exe',
+        command : [
+          find_program('python3', 'python'),
+          '-c',
+          'import shutil, sys; shutil.copyfile(sys.argv[1], sys.argv[2])',
+          gpgme_w32spawn.full_path(),
+          '@OUTPUT@',
+        ],
+      )
+    else
+      warning('gpgme-w32spawn.exe not found, the GPG self test cannot pass')
+    endif
+  endif
   testdatadirs = environment()
   testdatadirs.set('G_TEST_SRCDIR', testdatadir_src)
   testdatadirs.set('G_TEST_BUILDDIR', testdatadir_dst)
