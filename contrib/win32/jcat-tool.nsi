@@ -69,7 +69,7 @@ Section "Core files (required)" SecCore
   File /r "${SRCDIR}\*.*"
 
   ; kept for the uninstaller; see the PATH section below
-  File "${__FILEDIR__}\path-edit.ps1"
+  File "path-edit.ps1"
 
   WriteRegStr HKLM "Software\${APPNAME}" "InstallDir" "$INSTDIR"
   WriteRegStr HKLM "Software\${APPNAME}" "Version" "${VERSION}"
